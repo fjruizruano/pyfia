@@ -13,7 +13,6 @@ from PIL import Image
 # 3. A los píxeles cuya intensidad está por debajo del umbral se les calcula la densidad óptica.
 # 4. La densidad óptica integrada es la suma de densidades ópticas para cada núcleo.
 #
-
 print "\nThis is the Funny Program for Feulgen Image Analysis Densitometry"
 
 ##Definimos el algoritmo que se aplica a cada imagen
@@ -131,24 +130,33 @@ def abre_salida(ruta):
 	salida.write("-" * 40)
 	return salida
 
-for root, dirs, files in os.walk('/home/ruano/feulgen'):
-	print '\n@@@@@@@@@@@@@@@@'
-	print root # Ruta en la que estamos
-	print files # Ficheros que contiene
-	
-	# Creo el fichero de salida
-	primer_txt = True;
-
-	for current_file in files:
+def aplicar_algoritmo(ruta):
+	# Recorro todo el árbol de directorios a partir de la ruta
+	for root, dirs, files in os.walk(ruta):
+		print '\n@@@@@@@@@@@@@@@@'
+		print 'Analizando el path: ' + root # Ruta en la que estamos
+		#print files # Ficheros que contiene
+		files.sort()
 		
-		if fnmatch.fnmatch(current_file, '*.txt'):
-			print current_file + " is an txt "
-			if primer_txt is True:
-				salida = abre_salida(root);
-				primer_txt = False
-			algoritmo(root, current_file, '.txt', salida)
-	
-	if primer_txt is False:
-		salida.close()
+		primer_fichero = True;
+
+		for current_file in files:
+			
+			if fnmatch.fnmatch(current_file, '*.txt'):
+				# Si es el primer fichero, creo el fichero de salida
+				# Así no crea ficheros en los directorios sin ficheros analizables
+				if primer_fichero is True:
+					salida = abre_salida(root);
+					primer_fichero = False
+					
+				
+				print "Analizando " + current_file
+				algoritmo(root, current_file, '.txt', salida)
+		
+		if primer_fichero is False:
+			salida.close()
+
+url = str(raw_input("\n>>>Introduzca ruta de las imagenes:"))
+aplicar_algoritmo(url)
 
 print "\n FINISH \n"
