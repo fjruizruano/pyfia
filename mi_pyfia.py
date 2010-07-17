@@ -7,16 +7,14 @@ import os
 from PIL import Image
 
 #
-# DEFINICIÓN DEL ALGORITMO
-#
-# POR JESUCRISTO, COMÉNTALO
+# La actual versión del algoritmo pyFIA para cada imagen/núcleo en una determinada ruta:
+# 1. Lee la matriz de píxeles del canal verde de una imagen en color o el único canal si está en escala de grises.
+# 2. Estima la media del fondo para definir un umbral.
+# 3. A los píxeles cuya intensidad está por debajo del umbral se les calcula la densidad óptica.
+# 4. La densidad óptica integrada es la suma de densidades ópticas para cada núcleo.
 #
 
-# Hay que tener en cuenta que el umbral en este caso esta puesto
-# de forma arbitraria en un valor de 0.7 (0.16)
-#
-print "\nThis is the Funny Program for Feulgen\'s Reaction Image Analysis"
-#fondo = float(raw_input("\nIndique media fondo: "))
+print "\nThis is the Funny Program for Feulgen Image Analysis Densitometry"
 
 ##Definimos el algoritmo que se aplica a cada imagen
 
@@ -47,30 +45,30 @@ def algoritmo(ruta, foto, extension, fichero_salida):
 
 #			print pixels
 
-			if 1 < pixels < 255:
+			if 180 < pixels < 210: # umbral puesto "a ojo" para calcular media del fondo
 
 				sumapixels += 1
 
 				sumafondo += pixels
 
-		fondo = 1.0 * sumafondo/sumapixels
+		fondo = 1.0 * sumafondo/sumapixels # calcula la media del fondo de la imagen
 
-		umbral = -math.log10((fondo-10)/fondo)
+		umbral = -math.log10((fondo-10)/fondo) # define el umbral entre núcleo y fondo
 
 		for pixels in pixmap:
 
 			if pixels != 0:  
 
-				logaritmo = -math.log10(pixels/fondo)
+				logaritmo = -math.log10(pixels/fondo)  # calcula densidad óptica de los píxels
     
 			else:
 
-				logaritmo = 0
+				logaritmo = 0 # para que no dé error si el valor de píxel es 0
 
 
 			if logaritmo > umbral:
 
-				iod += logaritmo
+				iod += logaritmo # calcula densidad óptica integrada del núcleo
 
 
 	elif extension == ".txt":
@@ -83,51 +81,31 @@ def algoritmo(ruta, foto, extension, fichero_salida):
 
 		for pixels in pixmap:
 
+#			if 52000 < int(pixels) < 55000: # umbral puesto "a ojo" para calcular media del fondo
 
-#			if 52000 < int(pixels) < 55000:
-
-#			if 42000 < int(pixels) < 45000:
-
-#			if 38500 < int(pixels) < 41000:
-
-#			if 45500 < int(pixels) < 48000:
-
-#			if 46500 < int(pixels) < 49000:
-
-#			if 44500 < int(pixels) < 47000:
-
-			if 37500 < int(pixels) < 40000:
-
-
-			#	print int(pixels)
+			if 30000 < int(pixels) < 50000:
 
 				sumapixels += 1
 
 				sumafondo += int(pixels)
 
-#			print sumafondo
+		fondo = 1.0 * sumafondo/sumapixels # calcula la media del fondo de la imagen
 
-		fondo = 1.0 * sumafondo/sumapixels
-
-#		print fondo
-
-		umbral = -math.log10((fondo-640)/fondo)
+		umbral = -math.log10((fondo-640)/fondo) # define el umbral entre núcleo y fondo
 
 		for pixels in pixmap:
 
 			if int(pixels) != 0:  
 
-				logaritmo = -math.log10(int(pixels)/fondo)
+				logaritmo = -math.log10(int(pixels)/fondo) # calcula densidad óptica de los píxels
     
 			else:
 
-				logaritmo = 3
+				logaritmo = 3 # para que no dé error si el valor de píxel es 0
 
 			if logaritmo > umbral:
 
-				iod += logaritmo
-
-#	print iod
+				iod += logaritmo # calcula densidad óptica integrada del núcleo
 
 	iod = str(iod)
 	fondo = str(fondo)
@@ -146,14 +124,6 @@ def algoritmo(ruta, foto, extension, fichero_salida):
 
 	fichero_salida.write("\n%s \t %s \t %s" % (foto, iod, fondo))
 
-
-
-
-
-
-
-
-
 def abre_salida(ruta):
 	f_salida = ruta + "/output"
 	salida = open(f_salida ,"w")
@@ -161,8 +131,8 @@ def abre_salida(ruta):
 	salida.write("-" * 40)
 	return salida
 
-for root, dirs, files in os.walk('/home/jlpino/00facul/pyfia/pyfia/'):
-	print '@@@@@@@@@@@@@@@@'
+for root, dirs, files in os.walk('/home/ruano/feulgen'):
+	print '\n@@@@@@@@@@@@@@@@'
 	print root # Ruta en la que estamos
 	print files # Ficheros que contiene
 	
@@ -181,6 +151,4 @@ for root, dirs, files in os.walk('/home/jlpino/00facul/pyfia/pyfia/'):
 	if primer_txt is False:
 		salida.close()
 
-
 print "\n FINISH \n"
-
