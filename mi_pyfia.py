@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from commands import *
-import commands
 import math
 import fnmatch
 import os
@@ -13,27 +11,28 @@ from PIL import Image
 # 3. A los píxeles cuya intensidad está por debajo del umbral se les calcula la densidad óptica.
 # 4. La densidad óptica integrada es la suma de densidades ópticas para cada núcleo.
 #
+
 def algoritmo(ruta, foto):
 
-	def calcular_iod(pixmap, lower_limit, upper_limit, valor_resta):
+	def calcular_iod(pixmap, lower_limit, upper_limit, gap_limit):
 		
-		iod = 0 # Comenta qué es
-		sumapixels = 0 # Comenta qué es
-		sumafondo = 0 # Comenta qué es
-		fondo = 0 # Comenta qué es
-		umbral = 0 # Comenta qué es
+		iod = 0 # densidad óptica integrada de cada núcleo
+		pixels_fondo = 0 # número de píxels del fondo
+		suma_fondo = 0 # suma de valores de los píxeles del fondo
+		media_fondo = 0 # valor medio de los píxeles del fondo
+		umbral = 0 # valor de píxel por debajo del cual se considera núcleo
 		
 		for pixels in pixmap:
 			if lower_limit < int(pixels) < upper_limit: 
-				sumapixels += 1
-				sumafondo += int(pixels)
+				pixels_fondo += 1
+				suma_fondo += int(pixels)
 
-		media_fondo = 1.0 * sumafondo/sumapixels # calcula la media del fondo de la imagen
-		umbral = -math.log10((media_fondo-valor_resta)/media_fondo) # define el umbral entre núcleo y fondo
+		media_fondo = 1.0 * suma_fondo/pixels_fondo # calcula la media del fondo de la imagen
+		umbral = -math.log10((media_fondo-gap_limit)/media_fondo) # define el umbral entre núcleo y fondo
 
 		for pixels in pixmap:
 			if int(pixels) != 0:  
-				logaritmo = -math.log10(int(pixels)/media_fondo)  # calcula densidad óptica de los píxels
+				logaritmo = -math.log10(int(pixels)/media_fondo)  # calcula densidad óptica individual de cada píxel
 			else:
 				logaritmo = 0 # para que no dé error si el valor de píxel es 0
 
@@ -46,7 +45,7 @@ def algoritmo(ruta, foto):
 
 	if fnmatch.fnmatch(foto, '*.tif'):
 		imagen = Image.open(str(direccion))
-		pixmap = list(imagen.getdata(0))
+		pixmap = list(imagen.getdata(1))
 		(iod, media_fondo) = calcular_iod(pixmap, 180, 210, 10)
 	elif fnmatch.fnmatch(foto, '*.txt') :
 		imagen = open(str(direccion), 'r')
@@ -85,8 +84,7 @@ def aplicar_algoritmo(ruta):
 				# Así no crea ficheros en los directorios sin ficheros analizables
 				if primer_fichero is True:
 					salida = abre_salida(root);
-					primer_fichero = False
-					
+					primer_fichero = False					
 				
 				print "Analizando " + current_file
 				(iod, media_fondo) = algoritmo(root, current_file)
@@ -97,7 +95,6 @@ def aplicar_algoritmo(ruta):
 		
 		if primer_fichero is False:
 			salida.close()
-
 
 
 print "\nThis is the Funny Program for Feulgen Image Analysis Densitometry"
