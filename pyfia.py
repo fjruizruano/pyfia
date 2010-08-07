@@ -1,281 +1,110 @@
-from commands import *
-import commands
-
-#####################################################
-######creamos archivo con listado de imagenes########
-#####################################################
-
-def run_command(cmd):
-    getstatusoutput(cmd)
-
-# url = str(raw_input("\n>>>Introduzca ruta de las imagenes:"))
-
-url = "/home/ruano/feulgen"
-
-print "\nNota: Los nombres de las imagenes deben estar"
-print "compuestas de una sola palabra, sin espacios"
-
-home = str(commands.getoutput("echo $HOME"))
-
-url_temp_folders = str(home + "/.temp_folders")    #poner oculto
-
-url_temp_files = str(home + "/.temp_files")        #poner oculto
-
-comando1 = str("ls " + url + " > " + home + "/.temp_folders")    #oculto contiene lista de folders
-
-run_command(comando1)
-
-################################################################
-######creamos lista que contiene direcciones de carpetas########
-################################################################
-
-lista_folders = []
-
-file_read_folders = open(url_temp_folders)
-
-for linea in file_read_folders:
-        
-    lista_folders.append(linea)
-
-
-###Con este bucle eliminamos el caracter de retorno de carro \n 
-
-i = 0
-
-for folder in lista_folders:
-
-    ruta = folder[0:-1]
-    lista_folders[i] = str(ruta)
-    i += 1
-
-
-################################################################
-######definimos las extensiones con que vamos a trabajar #######
-################################################################
-
-#extension = ".jpg"
-
-extension = ".txt"
-
-#extension = str(raw_input("\n\t>>>Introduzca extension de archivos (nada = jpg): "))
-
-#if len(extension) == 0:
-
-#	extension = "jpg"
-
-#extension = "." + extension
-
-
-#####################################################
-######Aplicamos el algoritmo_paco a cada una ########
-#####################################################
-
 # -*- coding: utf-8 -*-
-#
-# Hay que tener en cuenta que el umbral en este caso esta puesto
-# de forma arbitraria en un valor de 0.7 (0.16)
-#
-
-
-print "\nThis is the Funny Program for Feulgen\'s Reaction Image Analysis"
-
 import math
-
-from PIL import Image
-
-#fondo = float(raw_input("\nIndique media fondo: "))
-
-##Definimos el algoritmo que se aplica a cada imagen
-
-def algoritmo(foto):
-
-	#nota para facilitar: imagen en la funcion algoritmo es foto
-
-	iod = 0
-
-	sumapixels = 0
-
-	sumafondo = 0
-
-	fondo = 0
-	
-	umbral = 0
-
-	direccion = str(url2 +"/" + foto)
-
-
-	if extension != ".txt":
-
-		imagen = Image.open(str(direccion))
-
-		pixmap = list(imagen.getdata(0))
-
-		for pixels in pixmap:
-
-#			print pixels
-
-			if 1 < pixels < 255:
-
-				sumapixels += 1
-
-				sumafondo += pixels
-
-		fondo = 1.0 * sumafondo/sumapixels
-
-		umbral = -math.log10((fondo-10)/fondo)
-
-		for pixels in pixmap:
-
-			if pixels != 0:  
-
-				logaritmo = -math.log10(pixels/fondo)
-    
-			else:
-
-				logaritmo = 0
-
-
-			if logaritmo > umbral:
-
-				iod += logaritmo
-
-
-	elif extension == ".txt":
-
-		imagen = open(str(direccion), 'r')
-
-		leer = imagen.read()
-
-		pixmap = leer.split()
-
-		for pixels in pixmap:
-
-
-#			if 52000 < int(pixels) < 55000:
-
-#			if 42000 < int(pixels) < 45000:
-
-#			if 38500 < int(pixels) < 41000:
-
-#			if 45500 < int(pixels) < 48000:
-
-#			if 46500 < int(pixels) < 49000:
-
-#			if 44500 < int(pixels) < 47000:
-
-			if 37500 < int(pixels) < 40000:
-
-
-			#	print int(pixels)
-
-				sumapixels += 1
-
-				sumafondo += int(pixels)
-
-#			print sumafondo
-
-		fondo = 1.0 * sumafondo/sumapixels
-
-#		print fondo
-
-		umbral = -math.log10((fondo-640)/fondo)
-
-		for pixels in pixmap:
-
-			if int(pixels) != 0:  
-
-				logaritmo = -math.log10(int(pixels)/fondo)
-    
-			else:
-
-				logaritmo = 3
-
-			if logaritmo > umbral:
-
-				iod += logaritmo
-
-#	print iod
-
-	iod = str(iod)
-	fondo = str(fondo)
-
-	posicion = iod.find(".")	#encuentra en una cadena el caracter .
-	posicion1 = fondo.find(".")
-
-	lista_temp = list(iod)		#pasamos iod de cadena a lista
-	lista_temp1 = list(fondo)
-
-	lista_temp[posicion] = ","	#cambiamos el caracter . por , en la lista
-	lista_temp1[posicion1] = ","
-
-	iod = "".join(lista_temp)	#pasamos iod de lista a cadena
-	fondo = "".join(lista_temp1)
-
-	salida.write("\n%s \t %s \t %s" % (foto, iod, fondo))
-
-
-
-
-#############################################################
-######Creamos la lista de archivos y aplicamos algoritmo#####
-#############################################################
-
-for folder in lista_folders:
-
-	url2 = url + "/" + folder
-
-	comando2 = str("ls " + url2 + " | grep '" + extension + "'" + " > " + home + "/.temp_files")	#oculto contiene lista de files
-
-	run_command(comando2)
-
-	lista_files = []
-
-	file_read_files = open(url_temp_files)
-
-#creamos la lista_files que contiene direcciones de imagenes
-
-	for linea in file_read_files:
+import fnmatch
+import os
+from PIL import Image # instalar desde repositorios
+import numpy # instalar desde repositorios
+import mahotas # ver wiki para instalar
+
+#
+# La actual versión del algoritmo pyFIA para cada imagen/núcleo en una determinada ruta:
+# 1. Lee la matriz de píxeles del canal verde de una imagen en color o el único canal si está en escala de grises.
+# 2. Estima el umbral por el método de Otsu usando las librerías de mahotas.
+# 3. Estima la media del fondo (pixels cuyo valor es superior al umbral).
+# 4. A los píxeles cuya intensidad está por debajo del umbral se les calcula la densidad óptica.
+# 5. La densidad óptica integrada es la suma de densidades ópticas para cada núcleo.
+# La media de foto y la densidad óptica de cada píxel están redondeadas al segundo decimal según Rasch 2006.
+#
+
+def algoritmo(ruta, foto):
+
+	def calcular_iod(pixmap):
 		
-		linea = str(linea[0:-1])	#eliminamos el caracter de retorno de carro \n	
-		   
-		lista_files.append(linea)	
+		iod = 0 # densidad óptica integrada de cada núcleo
+		pixels_fondo = 0 # número de píxels del fondo
+		suma_fondo = 0 # suma de valores de los píxeles del fondo
+		media_fondo = 0 # valor medio de los píxeles del fondo
 
+		for pixels in pixmap:
+			if pixels > umbral: 
+				pixels_fondo += 1
+				suma_fondo += int(pixels)
 
-	print "\n>>", len(lista_files), "ficheros en el directorio " + folder
+		media_fondo = 1.0 * suma_fondo/pixels_fondo # calcula la media del fondo de la imagen
 
-	###Comprobacion de carpeta. Si esta vacia se sale del programa
+		for pixels in pixmap:
 
-	if len(lista_files) == 0:
+			if int(pixels) <= umbral and int(pixels) != 0: # pixels inferiores al umbral y distintos de 0
+				logaritmo = -math.log10(int(pixels)/round(media_fondo,2))  # calcula densidad óptica individual de cada píxel
+				iod += round(logaritmo,2) # calcula densidad óptica integrada del núcleo
+				
+		return iod, umbral
 
-		print "\nAtencion: El directorio no contiene ficheros"
-		break
+	direccion = ruta +"/" + foto # Ruta completa a la imagen
 
-###Creamos archivo que contiene los calculos 
+	if fnmatch.fnmatch(foto, '*.tif'):
+#		pixmap = scipy.misc.pilutil.imread(str(direccion)) # abrir imagen con scipy
+		imagen = Image.open(str(direccion)) # abrir imagen tif
+		if imagen.mode == "L":
+			pixmap = list(imagen.getdata())  # realizar una lista con los valores del canal verde
+		elif imagen.mode == "RGB" or "RGBA":
+			pixmap = list(imagen.getdata(1))  # realizar una lista con los valores del canal
+		dna = numpy.array(pixmap, dtype='uintc') # de lista a array numpy
+		umbral = mahotas.thresholding.otsu(dna) # umbral por el metodo de otsu
+		(iod, umbral) = calcular_iod(pixmap) #aplicamos el algoritmo
+	elif fnmatch.fnmatch(foto, '*.txt'):
+		imagen = open(str(direccion), 'r') # abrir fichero de texto
+		leer = imagen.read() # leer
+		pixmap = leer.split() # lista con los valores del fichero
+		dna = numpy.array(pixmap, dtype='uintc') # de lista a array numpy
+		umbral = mahotas.thresholding.otsu(dna) # umbral por el metodo de otsu
+		(iod, umbral) = calcular_iod(pixmap) # aplicamos el algoritmo
+	
+	return iod, umbral
 
-	salida = open(url2 + "/output","w") #crea archivo en la carpeta indicada
-	salida.write("%s \t %s \t \t %s" % ("imagen", "IOD", "fondo" "\n"))
+def abre_salida(ruta):
+	f_salida = ruta + "/output"
+	salida = open(f_salida ,"w")
+	salida.write("%s \t %s \t  %s" % ("imagen", "IOD", "umbral" "\n"))
 	salida.write("-" * 40)
+	return salida
 
-	for imagen in lista_files:
+def aplicar_algoritmo(ruta):
+	# Recorro todo el árbol de directorios a partir de la ruta
+	for root, dirs, files in os.walk(ruta):
+		print '\n@@@@@@@@@@@@@@@@'
+		print 'Analizando el path: ' + root # Ruta en la que estamos
+		#print files # Ficheros que contiene
+		
+		# Ordenamos la lista de ficheros,
+		# para recorrerla por orden alfabético
+		files.sort()
+		
+		primer_fichero = True;
 
-		algoritmo(str(imagen))
+		for current_file in files:
+			
+			if fnmatch.fnmatch(current_file, '*.txt') \
+			or fnmatch.fnmatch(current_file, '*.tif') :
+				
+				# Si es el primer fichero, creo el fichero de salida
+				# Así no crea ficheros en los directorios sin ficheros analizables
+				if primer_fichero is True:
+					salida = abre_salida(root);
+					primer_fichero = False					
+				
+				print "Analizando " + current_file
+				(iod, umbral) = algoritmo(root, current_file)
+				
+				iod_str = str(iod).replace(".", ",")
+#				media_fondo_str = str(media_fondo).replace(".", ",")
+				salida.write("\n%s \t %s \t %s" % (current_file, iod_str, umbral))
+		
+		if primer_fichero is False:
+			salida.close()
 
-		print imagen		#puede ser util para conocer el progreso
+print "\nThis is the Funny Program for Feulgen Image Analysis Densitometry"
+url = str(raw_input("\n>>>Introduzca ruta de las imagenes:"))
+aplicar_algoritmo(url)
 
-	salida.close()
-
-#####################################################
-######Borramos archivos temporales y ceramos ########
-#####################################################
-
-file_read_folders.close()
-file_read_files.close()
-
-comando_borrar_folders = "rm " + url_temp_folders
-comando_borrar_files = "rm " + url_temp_files  
-
-run_command(comando_borrar_folders)
-run_command(comando_borrar_files)
-
-print "\nSe han creado", len(lista_folders), "archivos\n"
-
+print "\n FINISH \n"
