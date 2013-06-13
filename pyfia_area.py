@@ -20,25 +20,20 @@ def algoritmo(ruta, foto):
 
 		count_pix = 0
 		
-#		iod = 0 # densidad óptica integrada de cada núcleo
-#		pixels_fondo = 0 # número de píxels del fondo
-#		suma_fondo = 0 # suma de valores de los píxeles del fondo
-#		media_fondo = 0 # valor medio de los píxeles del fondo
-
 		for pixels in pixmap:
 			if int(pixels) <= umbral and int(pixels) != 0: # pixels lower the threshold and different of 0
-				count_pix += 1 # count one for each pixel
+				count_pix += 1 # count 1 for each pixel
 		return count_pix, umbral
 
 
 	direccion = ruta +"/" + foto # Full path of the image
 
 	if fnmatch.fnmatch(foto, '*.jpg'):
-		imagen = Image.open(str(direccion)) # opens JPG image
+		imagen = Image.open(str(direccion)) # open JPG image
 		if imagen.mode == "L":
-			pixmap = list(imagen.getdata()) # makes a list with the values of one channel
+			pixmap = list(imagen.getdata()) # make a list with the values of one channel
 		elif imagen.mode == "RGB" or "RGBA":
-			pixmap = list(imagen.getdata(1)) # makes a list with the values of indicated channel
+			pixmap = list(imagen.getdata(1)) # make a list with the values of indicated channel
 			# you can change de value: 0 = red, 1 = green, 2 = red
 		dna = numpy.array(pixmap, dtype='uintc') # from lista to numpy array
 		umbral = mahotas.thresholding.otsu(dna) # threshold by Otsu's method
@@ -50,7 +45,7 @@ def algoritmo(ruta, foto):
 		dna = numpy.array(pixmap, dtype='uintc') # from lista to numpy array
 		umbral = mahotas.thresholding.otsu(dna) # threshold by Otsu's method
 #		umbral = 230 
-		(count_pix, umbral) = calcular_iod(pixmap) # applies the algorithm
+		(count_pix, umbral) = calcular_iod(pixmap) # apply the algorithm
 	
 	return count_pix, umbral
 
@@ -67,7 +62,7 @@ def aplicar_algoritmo(ruta):
 		print '\n@@@@@@@@@@@@@@@@'
 		print 'Analyzing the path: ' + root # Path where it is
 
-		# Sorts alphabetically the list of files 		
+		# Sort alphabetically the list of files 		
 		files.sort()
 		
 		primer_fichero = True;
@@ -77,8 +72,8 @@ def aplicar_algoritmo(ruta):
 			if fnmatch.fnmatch(current_file, '*.txt') \
 			or fnmatch.fnmatch(current_file, '*.jpg') :
 				
-				# If it is the first file, creates the output file
-				# Thus, it do not creates file inthe folders without
+				# If it is the first file, it create the output file
+				# Thus, it does not create file in the folders without
 				if primer_fichero is True:
 					salida = abre_salida(root);
 					primer_fichero = False					

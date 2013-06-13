@@ -21,45 +21,45 @@ def algoritmo(ruta, foto):
 
 	def calcular_iod(pixmap):
 		
-		iod = 0 # densidad óptica integrada de cada núcleo
-		pixels_fondo = 0 # número de píxels del fondo
-		suma_fondo = 0 # suma de valores de los píxeles del fondo
-		media_fondo = 0 # valor medio de los píxeles del fondo
+		iod = 0 # IOD of each object
+		pixels_fondo = 0 # number of background pixels
+		suma_fondo = 0 # sum of the values of background pixels
+		media_fondo = 0 # average value of the background pixels
 
 		for pixels in pixmap:
 			if pixels > umbral: 
 				pixels_fondo += 1
 				suma_fondo += int(pixels)
 
-		media_fondo = 1.0 * suma_fondo/pixels_fondo # calcula la media del fondo de la imagen
+		media_fondo = 1.0 * suma_fondo/pixels_fondo # calculate the background average of the image
 
 		for pixels in pixmap:
 
-			if int(pixels) <= umbral and int(pixels) != 0: # pixels inferiores al umbral y distintos de 0
-				logaritmo = -math.log10(int(pixels)/round(media_fondo,2))  # calcula densidad óptica individual de cada píxel
-				iod += round(logaritmo,2) # calcula densidad óptica integrada del núcleo
+			if int(pixels) <= umbral and int(pixels) != 0: # pixels lower the threshold and different to 0
+				logaritmo = -math.log10(int(pixels)/round(media_fondo,2))  # calculate the OD of each pixel
+				iod += round(logaritmo,2) # calculates IOD of the object
 				
 		return iod, umbral
 
-	direccion = ruta +"/" + foto # Ruta completa a la imagen
+	direccion = ruta +"/" + foto # Full path to the image
 
 	if fnmatch.fnmatch(foto, '*.tif'):
-#		pixmap = scipy.misc.pilutil.imread(str(direccion)) # abrir imagen con scipy
-		imagen = Image.open(str(direccion)) # abrir imagen tif
+		imagen = Image.open(str(direccion)) # open TIFF images
 		if imagen.mode == "L":
-			pixmap = list(imagen.getdata())  # realizar una lista con los valores del canal verde
+			pixmap = list(imagen.getdata()) # make a list with the values of one channel
 		elif imagen.mode == "RGB" or "RGBA":
-			pixmap = list(imagen.getdata(1))  # realizar una lista con los valores del canal
-		dna = numpy.array(pixmap, dtype='uintc') # de lista a array numpy
-		umbral = mahotas.thresholding.otsu(dna) # umbral por el metodo de otsu
-		(iod, umbral) = calcular_iod(pixmap) #aplicamos el algoritmo
+			pixmap = list(imagen.getdata(1)) # make a list with the values of indicated channel
+			# you can change de value: 0 = red, 1 = green, 2 = red
+		dna = numpy.array(pixmap, dtype='uintc') # from lista to numpy array
+		umbral = mahotas.thresholding.otsu(dna)  # threshold by Otsu's method
+		(iod, umbral) = calcular_iod(pixmap) # apply the algorithm
 	elif fnmatch.fnmatch(foto, '*.txt'):
-		imagen = open(str(direccion), 'r') # abrir fichero de texto
-		leer = imagen.read() # leer
-		pixmap = leer.split() # lista con los valores del fichero
-		dna = numpy.array(pixmap, dtype='uintc') # de lista a array numpy
-		umbral = mahotas.thresholding.otsu(dna) # umbral por el metodo de otsu
-		(iod, umbral) = calcular_iod(pixmap) # aplicamos el algoritmo
+		imagen = open(str(direccion), 'r') # open text file
+		leer = imagen.read() # read
+		pixmap = leer.split() # list with the values of the file
+		dna = numpy.array(pixmap, dtype='uintc') # from lista to numpy array
+		umbral = mahotas.thresholding.otsu(dna) # threshold by Otsu's method
+		(iod, umbral) = calcular_iod(pixmap)  # apply the algorithm
 	
 	return iod, umbral
 
@@ -71,14 +71,12 @@ def abre_salida(ruta):
 	return salida
 
 def aplicar_algoritmo(ruta):
-	# Recorro todo el árbol de directorios a partir de la ruta
+	# Walks all the tree of folders since the path
 	for root, dirs, files in os.walk(ruta):
 		print '\n@@@@@@@@@@@@@@@@'
-		print 'Analizando el path: ' + root # Ruta en la que estamos
-		#print files # Ficheros que contiene
+		print 'Analyzing the path: ' + root # Path where it is
 		
-		# Ordenamos la lista de ficheros,
-		# para recorrerla por orden alfabético
+		# Sort alphabetically the list of files 		
 		files.sort()
 		
 		primer_fichero = True;
@@ -88,24 +86,23 @@ def aplicar_algoritmo(ruta):
 			if fnmatch.fnmatch(current_file, '*.txt') \
 			or fnmatch.fnmatch(current_file, '*.tif') :
 				
-				# Si es el primer fichero, creo el fichero de salida
-				# Así no crea ficheros en los directorios sin ficheros analizables
+				# If it is the first file, it create the output file
+				# Thus, it does not create file in the folders without
 				if primer_fichero is True:
 					salida = abre_salida(root);
 					primer_fichero = False					
 				
-				print "Analizando " + current_file
+				print "Analyzing " + current_file
 				(iod, umbral) = algoritmo(root, current_file)
 				
 				iod_str = str(iod).replace(".", ",")
-#				media_fondo_str = str(media_fondo).replace(".", ",")
 				salida.write("\n%s \t %s \t %s" % (current_file, iod_str, umbral))
 		
 		if primer_fichero is False:
 			salida.close()
 
-print "\nThis is the Funny Program for Feulgen Image Analysis Densitometry"
-url = str(raw_input("\n>>>Introduzca ruta de las imagenes:"))
+print "\nThis is pyFIA, the Funny Program for Feulgen Image Analysis Densitometry"
+url = str(raw_input("\n>>>Type the path of the images: "))
 aplicar_algoritmo(url)
 
 print "\n FINISH \n"
