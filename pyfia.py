@@ -1,19 +1,20 @@
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 import math
 import fnmatch
 import os
-from PIL import Image # instalar desde repositorios
-import numpy # instalar desde repositorios
-import mahotas # ver wiki para instalar
+from PIL import Image # install from repositories
+import numpy # install from repositories
+import mahotas # see pyFIA's wiki for installing
 
 #
-# La actual versión del algoritmo pyFIA para cada imagen/núcleo en una determinada ruta:
-# 1. Lee la matriz de píxeles del canal verde de una imagen en color o el único canal si está en escala de grises.
-# 2. Estima el umbral por el método de Otsu usando las librerías de mahotas.
-# 3. Estima la media del fondo (pixels cuyo valor es superior al umbral).
-# 4. A los píxeles cuya intensidad está por debajo del umbral se les calcula la densidad óptica.
-# 5. La densidad óptica integrada es la suma de densidades ópticas para cada núcleo.
-# La media de foto y la densidad óptica de cada píxel están redondeadas al segundo decimal según Rasch 2006.
+# This is a version of pyFIA for area quantification, instead densitometry, for each object in a determinated path:
+# 1. Reads the matrix of pixels from green canal (it can be modified to red or blue) or the only channel if it is grayscale.
+# 2. Estimates the threshold between the object and the background by Otsu's method using the mahotas library.
+# 3. Estimates the average from background (pixels with a value greater the threshold).
+# 4. Optical Density (OD) is calculated for pixels with a value lower the threshold.
+# 5. Integrated OD (IOD) is the sum of OD for each object-
+# All OD are rounded to the second decimal as Rasch 2006.
 #
 
 def algoritmo(ruta, foto):

@@ -1,19 +1,17 @@
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 import math
 import fnmatch
 import os
-from PIL import Image # instalar desde repositorios
-import numpy # instalar desde repositorios
-import mahotas # ver wiki para instalar
+from PIL import Image # install from repositories
+import numpy # install from repositories
+import mahotas # see pyFIA's wiki for installing
 
 #
-# La actual versión del algoritmo pyFIA para cada imagen/núcleo en una determinada ruta:
-# 1. Lee la matriz de píxeles del canal verde de una imagen en color o el único canal si está en escala de grises.
-# 2. Estima el umbral por el método de Otsu usando las librerías de mahotas.
-# 3. Estima la media del fondo (pixels cuyo valor es superior al umbral).
-# 4. A los píxeles cuya intensidad está por debajo del umbral se les calcula la densidad óptica.
-# 5. La densidad óptica integrada es la suma de densidades ópticas para cada núcleo.
-# La media de foto y la densidad óptica de cada píxel están redondeadas al segundo decimal según Rasch 2006.
+# This is a version of pyFIA for area quantification, instead densitometry, for each object in a determinated path:
+# 1. Reads the matrix of pixels from green canal (it can be modified to red or blue) or the only channel if it is grayscale.
+# 2. Estimates the threshold between the object and the background by Otsu's method using the mahotas library.
+# 3. Counts the pixels with a value lower the threshold.
 #
 
 def algoritmo(ruta, foto):
@@ -22,54 +20,37 @@ def algoritmo(ruta, foto):
 
 		count_pix = 0
 		
-		iod = 0 # densidad óptica integrada de cada núcleo
-		pixels_fondo = 0 # número de píxels del fondo
-		suma_fondo = 0 # suma de valores de los píxeles del fondo
-		media_fondo = 0 # valor medio de los píxeles del fondo
-
-#		for pixels in pixmap:
-#			if pixels < umbral: 
-#			if pixels > umbral: 
-#				pixels_fondo += 1
-#				suma_fondo += int(pixels)
-
-#		media_fondo = 1.0 * suma_fondo/pixels_fondo # calcula la media del fondo de la imagen
+#		iod = 0 # densidad óptica integrada de cada núcleo
+#		pixels_fondo = 0 # número de píxels del fondo
+#		suma_fondo = 0 # suma de valores de los píxeles del fondo
+#		media_fondo = 0 # valor medio de los píxeles del fondo
 
 		for pixels in pixmap:
-
-			if int(pixels) <= umbral and int(pixels) <= 250 : # pixels inferiores al umbral y distintos de 0
-#			if int(pixels) <= umbral and int(pixels) != 0: # pixels inferiores al umbral y distintos de 0
-#				logaritmo = -math.log10(int(round(media_fondo,2)/int(pixels))  # calcula densidad óptica individual de cada píxel
-#				logaritmo = -math.log10(int(pixels)/round(media_fondo,2))  # calcula densidad óptica individual de cada píxel
-#				iod += round(logaritmo,2) # calcula densidad óptica integrada del núcleo
-				count_pix += 1
-		print count_pix
-				
+			if int(pixels) <= umbral and int(pixels) != 0: # pixels lower the threshold and different of 0
+				count_pix += 1 # count one for each pixel
 		return count_pix, umbral
 
 
-	direccion = ruta +"/" + foto # Ruta completa a la imagen
+	direccion = ruta +"/" + foto # Full path of the image
 
 	if fnmatch.fnmatch(foto, '*.jpg'):
-#		pixmap = scipy.misc.pilutil.imread(str(direccion)) # abrir imagen con scipy
-		imagen = Image.open(str(direccion)) # abrir imagen tif
-#		print imagen
+		imagen = Image.open(str(direccion)) # opens JPG image
 		if imagen.mode == "L":
-			pixmap = list(imagen.getdata())  # realizar una lista con los valores del canal verde
+			pixmap = list(imagen.getdata()) # makes a list with the values of one channel
 		elif imagen.mode == "RGB" or "RGBA":
-			pixmap = list(imagen.getdata(2))  # realizar una lista con los valores del canal
-#			print pixmap
-		dna = numpy.array(pixmap, dtype='uintc') # de lista a array numpy
-		umbral = mahotas.thresholding.otsu(dna) # umbral por el metodo de otsu
-		(count_pix, umbral) = calcular_iod(pixmap) #aplicamos el algoritmo
+			pixmap = list(imagen.getdata(1)) # makes a list with the values of indicated channel
+			# you can change de value: 0 = red, 1 = green, 2 = red
+		dna = numpy.array(pixmap, dtype='uintc') # from lista to numpy array
+		umbral = mahotas.thresholding.otsu(dna) # threshold by Otsu's method
+		(count_pix, umbral) = calcular_iod(pixmap) # applies the algorithm
 	elif fnmatch.fnmatch(foto, '*.txt'):
-		imagen = open(str(direccion), 'r') # abrir fichero de texto
-		leer = imagen.read() # leer
-		pixmap = leer.split() # lista con los valores del fichero
-		dna = numpy.array(pixmap, dtype='uintc') # de lista a array numpy
-#		umbral = mahotas.thresholding.otsu(dna) # umbral por el metodo de otsu
-		umbral = 230 
-		(count_pix, umbral) = calcular_iod(pixmap) # aplicamos el algoritmo
+		imagen = open(str(direccion), 'r') # opens text file
+		leer = imagen.read() # reads
+		pixmap = leer.split() # list with the values of the file
+		dna = numpy.array(pixmap, dtype='uintc') # from lista to numpy array
+		umbral = mahotas.thresholding.otsu(dna) # threshold by Otsu's method
+#		umbral = 230 
+		(count_pix, umbral) = calcular_iod(pixmap) # applies the algorithm
 	
 	return count_pix, umbral
 
@@ -81,14 +62,12 @@ def abre_salida(ruta):
 	return salida
 
 def aplicar_algoritmo(ruta):
-	# Recorro todo el árbol de directorios a partir de la ruta
+	# Walks all the tree of folders since the path
 	for root, dirs, files in os.walk(ruta):
 		print '\n@@@@@@@@@@@@@@@@'
-		print 'Analizando el path: ' + root # Ruta en la que estamos
-		#print files # Ficheros que contiene
-		
-		# Ordenamos la lista de ficheros,
-		# para recorrerla por orden alfabético
+		print 'Analyzing the path: ' + root # Path where it is
+
+		# Sorts alphabetically the list of files 		
 		files.sort()
 		
 		primer_fichero = True;
@@ -98,24 +77,22 @@ def aplicar_algoritmo(ruta):
 			if fnmatch.fnmatch(current_file, '*.txt') \
 			or fnmatch.fnmatch(current_file, '*.jpg') :
 				
-				# Si es el primer fichero, creo el fichero de salida
-				# Así no crea ficheros en los directorios sin ficheros analizables
+				# If it is the first file, creates the output file
+				# Thus, it do not creates file inthe folders without
 				if primer_fichero is True:
 					salida = abre_salida(root);
 					primer_fichero = False					
 				
-				print "Analizando " + current_file
+				print "Analyzing " + current_file
 				(count_pix, umbral) = algoritmo(root, current_file)
 				
-#				iod_str = str(iod).replace(".", ",")
-#				media_fondo_str = str(media_fondo).replace(".", ",")
 				salida.write("\n%s \t %s \t %s" % (current_file,  str(count_pix), umbral))
 		
 		if primer_fichero is False:
 			salida.close()
 
-print "\nThis is the Funny Program for Feulgen Image Analysis Densitometry"
-url = str(raw_input("\n>>>Introduzca ruta de las imagenes:"))
+print "\nThis is the Funny Program based in pyFIA for area measurement by Image Analysis"
+url = str(raw_input("\n>>>Type the path of the images: "))
 aplicar_algoritmo(url)
 
 print "\n FINISH \n"
