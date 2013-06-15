@@ -56,7 +56,7 @@ def algoritmo(ruta, foto):
 		umbral = mahotas.thresholding.otsu(dna)  # threshold by Otsu's method
 		(iod, umbral) = calcular_iod(pixmap) # apply the algorithm
 	if fnmatch.fnmatch(foto, '*.jpg'):
-		imagen = Image.open(str(direccion)) # open TIFF images
+		imagen = Image.open(str(direccion)) # open JPEG images
 		if imagen.mode == "L":
 			pixmap = list(imagen.getdata()) # make a list with the values of one channel
 		elif imagen.mode == "RGB" or "RGBA":
@@ -96,6 +96,7 @@ def aplicar_algoritmo(ruta):
 		for current_file in files:
 			
 			if fnmatch.fnmatch(current_file, '*.txt') \
+			or fnmatch.fnmatch(current_file, '*.jpg') \
 			or fnmatch.fnmatch(current_file, '*.tif') :
 				
 				# If it is the first file, it creates the output file

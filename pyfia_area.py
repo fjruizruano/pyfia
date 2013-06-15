@@ -29,7 +29,7 @@ def algoritmo(ruta, foto):
 	direccion = ruta +"/" + foto # Full path of the image
 
 	if fnmatch.fnmatch(foto, '*.tif'):
-		imagen = Image.open(str(direccion)) # open JPG image
+		imagen = Image.open(str(direccion)) # open TIFF image
 		if imagen.mode == "L":
 			pixmap = list(imagen.getdata()) # make a list with the values of one channel
 		elif imagen.mode == "RGB" or "RGBA":
@@ -39,7 +39,7 @@ def algoritmo(ruta, foto):
 		umbral = mahotas.thresholding.otsu(dna) # threshold by Otsu's method
 		(count_pix, umbral) = calcular_iod(pixmap) # applies the algorithm
 	if fnmatch.fnmatch(foto, '*.jpg'):
-		imagen = Image.open(str(direccion)) # open JPG image
+		imagen = Image.open(str(direccion)) # open JPEG image
 		if imagen.mode == "L":
 			pixmap = list(imagen.getdata()) # make a list with the values of one channel
 		elif imagen.mode == "RGB" or "RGBA":
@@ -80,6 +80,7 @@ def aplicar_algoritmo(ruta):
 		for current_file in files:
 			
 			if fnmatch.fnmatch(current_file, '*.txt') \
+			or fnmatch.fnmatch(current_file, '*.tif') \
 			or fnmatch.fnmatch(current_file, '*.jpg') :
 				
 				# If it is the first file, it create the output file
