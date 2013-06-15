@@ -37,13 +37,25 @@ def algoritmo(ruta, foto):
 
 			if int(pixels) <= umbral and int(pixels) != 0: # pixels lower the threshold and different to 0
 				logaritmo = -math.log10(int(pixels)/round(media_fondo,2))  # calculate the OD of each pixel
-				iod += round(logaritmo,2) # calculates IOD of the object
+				iod += round(logaritmo,2) # calculate IOD of the object
 				
 		return iod, umbral
 
 	direccion = ruta +"/" + foto # Full path to the image
 
+# ADD SUPPORT FOR JPG
+
 	if fnmatch.fnmatch(foto, '*.tif'):
+		imagen = Image.open(str(direccion)) # open TIFF images
+		if imagen.mode == "L":
+			pixmap = list(imagen.getdata()) # make a list with the values of one channel
+		elif imagen.mode == "RGB" or "RGBA":
+			pixmap = list(imagen.getdata(1)) # make a list with the values of indicated channel
+			# you can change de value: 0 = red, 1 = green, 2 = red
+		dna = numpy.array(pixmap, dtype='uintc') # from lista to numpy array
+		umbral = mahotas.thresholding.otsu(dna)  # threshold by Otsu's method
+		(iod, umbral) = calcular_iod(pixmap) # apply the algorithm
+	if fnmatch.fnmatch(foto, '*.jpg'):
 		imagen = Image.open(str(direccion)) # open TIFF images
 		if imagen.mode == "L":
 			pixmap = list(imagen.getdata()) # make a list with the values of one channel
@@ -86,8 +98,8 @@ def aplicar_algoritmo(ruta):
 			if fnmatch.fnmatch(current_file, '*.txt') \
 			or fnmatch.fnmatch(current_file, '*.tif') :
 				
-				# If it is the first file, it create the output file
-				# Thus, it does not create file in the folders without
+				# If it is the first file, it creates the output file
+				# Thus, it does not create a file in the folders
 				if primer_fichero is True:
 					salida = abre_salida(root);
 					primer_fichero = False					

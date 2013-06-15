@@ -28,6 +28,16 @@ def algoritmo(ruta, foto):
 
 	direccion = ruta +"/" + foto # Full path of the image
 
+	if fnmatch.fnmatch(foto, '*.tif'):
+		imagen = Image.open(str(direccion)) # open JPG image
+		if imagen.mode == "L":
+			pixmap = list(imagen.getdata()) # make a list with the values of one channel
+		elif imagen.mode == "RGB" or "RGBA":
+			pixmap = list(imagen.getdata(1)) # make a list with the values of indicated channel
+			# you can change de value: 0 = red, 1 = green, 2 = red
+		dna = numpy.array(pixmap, dtype='uintc') # from lista to numpy array
+		umbral = mahotas.thresholding.otsu(dna) # threshold by Otsu's method
+		(count_pix, umbral) = calcular_iod(pixmap) # applies the algorithm
 	if fnmatch.fnmatch(foto, '*.jpg'):
 		imagen = Image.open(str(direccion)) # open JPG image
 		if imagen.mode == "L":
@@ -73,7 +83,7 @@ def aplicar_algoritmo(ruta):
 			or fnmatch.fnmatch(current_file, '*.jpg') :
 				
 				# If it is the first file, it create the output file
-				# Thus, it does not create file in the folders without
+				# Thus, it does not create file in the folders
 				if primer_fichero is True:
 					salida = abre_salida(root);
 					primer_fichero = False					
