@@ -1,0 +1,1 @@
+pyFIA will help you if you want to quantify genome and chromosome size.
